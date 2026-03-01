@@ -10,7 +10,10 @@ User = get_user_model()
 class ModelTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="owner", password="pass1234")
-        self.collaborator = User.objects.create_user(username="collab", password="pass1234")
+        self.collaborator = User.objects.create_user(
+            username="collab",
+            password="pass1234",
+        )
         self.category = Category.objects.create(name="Work")
 
     def test_category_str(self):

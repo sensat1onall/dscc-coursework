@@ -31,14 +31,22 @@ class ViewTests(TestCase):
         self.assertEqual(task.owner, self.user)
 
     def test_task_detail_accessible_to_owner(self):
-        task = Task.objects.create(title="Owned Task", description="desc", owner=self.user)
+        task = Task.objects.create(
+            title="Owned Task",
+            description="desc",
+            owner=self.user,
+        )
         self.client.login(username="owner", password="pass1234")
         response = self.client.get(reverse("task_detail", args=[task.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Owned Task")
 
     def test_update_task_changes_status(self):
-        task = Task.objects.create(title="Update Me", description="desc", owner=self.user)
+        task = Task.objects.create(
+            title="Update Me",
+            description="desc",
+            owner=self.user,
+        )
         self.client.login(username="owner", password="pass1234")
         response = self.client.post(
             reverse("update_task", args=[task.pk]),

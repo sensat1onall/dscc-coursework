@@ -92,7 +92,9 @@ def task_list(request):
 @login_required
 def task_detail(request, pk):
     task = get_object_or_404(
-        Task.objects.select_related("category", "owner").prefetch_related("collaborators"),
+        Task.objects.select_related("category", "owner").prefetch_related(
+            "collaborators"
+        ),
         pk=pk,
     )
     if task.owner != request.user and request.user not in task.collaborators.all():
