@@ -1,1 +1,1 @@
-# Placeholder for Django's test discovery.
+﻿# Placeholder for Django's test discovery.
