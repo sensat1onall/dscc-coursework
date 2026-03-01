@@ -1,4 +1,4 @@
-﻿from django import forms
+from django import forms
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -8,7 +8,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .models import Comment, Task
 
 
-# ---------- Task Form ----------
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
@@ -26,14 +25,12 @@ class CommentForm(forms.ModelForm):
         widgets = {"body": forms.Textarea(attrs={"rows": 3})}
 
 
-# ---------- Home ----------
 def home(request):
     if request.user.is_authenticated:
         return redirect("task_list")
     return render(request, "home.html")
 
 
-# ---------- Register ----------
 def register_view(request):
     if request.method == "POST":
         form = UserCreationForm(request.POST)
@@ -48,7 +45,6 @@ def register_view(request):
     return render(request, "register.html", {"form": form})
 
 
-# ---------- Login ----------
 def login_view(request):
     if request.user.is_authenticated:
         return redirect("task_list")
@@ -66,7 +62,6 @@ def login_view(request):
     return render(request, "login.html", {"form": form})
 
 
-# ---------- Task List ----------
 @login_required
 def task_list(request):
     tasks = (
@@ -84,11 +79,13 @@ def task_list(request):
     return render(
         request,
         "task_list.html",
-        {"tasks": tasks, "shared_tasks": shared_tasks},
+        {
+            "tasks": tasks,
+            "shared_tasks": shared_tasks,
+        },
     )
 
 
-# ---------- Task Detail ----------
 @login_required
 def task_detail(request, pk):
     task = get_object_or_404(
@@ -118,11 +115,14 @@ def task_detail(request, pk):
     return render(
         request,
         "task_detail.html",
-        {"task": task, "comments": comments, "comment_form": comment_form},
+        {
+            "task": task,
+            "comments": comments,
+            "comment_form": comment_form,
+        },
     )
 
 
-# ---------- Create Task ----------
 @login_required
 def create_task(request):
     if request.method == "POST":
@@ -139,7 +139,6 @@ def create_task(request):
     return render(request, "task_form.html", {"form": form})
 
 
-# ---------- Delete Task ----------
 @login_required
 def delete_task(request, pk):
     task = get_object_or_404(Task, pk=pk, owner=request.user)
@@ -147,7 +146,6 @@ def delete_task(request, pk):
     return redirect("task_list")
 
 
-# ---------- Update Task ----------
 @login_required
 def update_task(request, pk):
     task = get_object_or_404(Task, pk=pk, owner=request.user)
@@ -162,7 +160,6 @@ def update_task(request, pk):
     return render(request, "task_form.html", {"form": form, "task": task})
 
 
-# ---------- Logout ----------
 def logout_view(request):
     logout(request)
     return redirect("home")

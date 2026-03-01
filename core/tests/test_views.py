@@ -1,4 +1,4 @@
-﻿from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -9,7 +9,7 @@ User = get_user_model()
 
 
 class ViewTests(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.client = Client()
         self.user = User.objects.create_user(username="owner", password="pass1234")
 
@@ -50,7 +50,11 @@ class ViewTests(TestCase):
         self.client.login(username="owner", password="pass1234")
         response = self.client.post(
             reverse("update_task", args=[task.pk]),
-            {"title": "Update Me", "description": "desc", "status": "done"},
+            {
+                "title": "Update Me",
+                "description": "desc",
+                "status": "done",
+            },
             follow=True,
         )
         self.assertEqual(response.status_code, 200)

@@ -1,4 +1,4 @@
-﻿from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from core.models import Category, Comment, Task
@@ -8,7 +8,7 @@ User = get_user_model()
 
 
 class ModelTests(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = User.objects.create_user(username="owner", password="pass1234")
         self.collaborator = User.objects.create_user(
             username="collab",
