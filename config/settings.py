@@ -9,8 +9,12 @@ load_dotenv(BASE_DIR / ".env")
 # Security
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-unsafe-secret")
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
-ALLOWED_HOSTS = [host for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host]
-CSRF_TRUSTED_ORIGINS = [origin for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin]
+ALLOWED_HOSTS = [
+    host for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host
+]
+CSRF_TRUSTED_ORIGINS = [
+    origin for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin
+]
 
 # Application definition
 INSTALLED_APPS = [
