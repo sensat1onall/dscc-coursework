@@ -15,7 +15,8 @@ ALLOWED_HOSTS = [
     if host
 ]
 CSRF_TRUSTED_ORIGINS = [
-    origin for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin
+    origin for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin
 ]
 
 # Application definition
