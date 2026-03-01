@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h2>My Tasks</h2>
+    <a class="btn primary" href="{% url 'create_task' %}">Create Task</a>
+</div>
+
+<section class="list">
+    {% if tasks %}
+        {% for task in tasks %}
+            <article class="task">
+                <header>
+                    <h3><a href="{% url 'task_detail' task.pk %}">{{ task.title }}</a></h3>
+                    <span class="badge">{{ task.get_status_display }}</span>
+                </header>
+                <p class="muted">{{ task.category|default:"No category" }}</p>
+                {% with collabs=task.collaborators.all %}
+                    <p class="muted">Collaborators:
+                        {% if collabs %}
+                            {% for c in collabs %}{{ c.username }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        {% else %}None{% endif %}
+                    </p>
+                {% endwith %}
+                <div class="actions">
+                    <a class="btn secondary" href="{% url 'update_task' task.pk %}">Edit</a>
+                    <a class="btn danger" href="{% url 'delete_task' task.pk %}">Delete</a>
+                </div>
+            </article>
+        {% endfor %}
+    {% else %}
+        <p class="muted">No tasks yet.</p>
+    {% endif %}
+</section>
+
+{% if shared_tasks %}
+<h2>Shared With Me</h2>
+<section class="list">
+    {% for task in shared_tasks %}
+        <article class="task">
+            <header>
+                <h3><a href="{% url 'task_detail' task.pk %}">{{ task.title }}</a></h3>
+                <span class="badge">{{ task.get_status_display }}</span>
+            </header>
+            <p class="muted">Owner: {{ task.owner.username }}</p>
+        </article>
+    {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

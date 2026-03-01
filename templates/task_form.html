@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>{% if task %}Update Task{% else %}Create Task{% endif %}</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn primary">Save</button>
+    </form>
+</div>
+{% endblock %}
+

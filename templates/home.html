@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+    <h1>Organize tasks, collaborate, and track progress.</h1>
+    <p>Create tasks, invite collaborators, comment on work, and keep everything in one place.</p>
+    <div class="cta">
+        <a class="btn primary" href="{% url 'register' %}">Get Started</a>
+        <a class="btn secondary" href="{% url 'login' %}">Log In</a>
+    </div>
+</section>
+{% endblock %}

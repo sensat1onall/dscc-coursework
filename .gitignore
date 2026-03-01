@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+
+# Environments
+venv/
+.env
+
+# Django
+db.sqlite3
+staticfiles/
+media/
+
+# OS/IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Build artifacts
+Coursework1_tmp.zip
+_docx/
+Coursework 1 DSCC.docx
+coursework_text.txt
+Coursework 1 DSCC.pdf
+~$*

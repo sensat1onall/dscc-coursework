@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+venv/
+db.sqlite3
+staticfiles/
+media/
+_docx/
+Coursework1_tmp.zip
+Coursework 1 DSCC.docx
+.env
+.env.*
+*.log
+.pytest_cache/
