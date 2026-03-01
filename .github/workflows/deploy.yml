@@ -44,7 +44,7 @@ jobs:
       - name: Lint (flake8)
         run: flake8 core config
       - name: Format check (black)
-        run: black --check .
+        run: black --check --line-length 100 .
       - name: Run migrations
         run: python manage.py migrate --noinput
       - name: Run tests
