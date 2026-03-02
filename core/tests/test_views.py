@@ -12,6 +12,7 @@ class ViewTests(TestCase):
     def setUp(self) -> None:
         self.client = Client()
         self.user = User.objects.create_user(username="owner", password="pass1234")
+        self.other_user = User.objects.create_user(username="other", password="pass1234")
 
     def test_task_list_requires_login(self):
         response = self.client.get(reverse("task_list"))
@@ -60,3 +61,48 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         task.refresh_from_db()
         self.assertEqual(task.status, "done")
+
+    def test_delete_task_requires_post(self):
+        task = Task.objects.create(
+            title="Delete Me",
+            description="desc",
+            owner=self.user,
+        )
+        self.client.login(username="owner", password="pass1234")
+        response = self.client.get(reverse("delete_task", args=[task.pk]))
+        self.assertEqual(response.status_code, 405)
+        self.assertTrue(Task.objects.filter(pk=task.pk).exists())
+
+    def test_delete_task_post_deletes(self):
+        task = Task.objects.create(
+            title="Delete Me",
+            description="desc",
+            owner=self.user,
+        )
+        self.client.login(username="owner", password="pass1234")
+        response = self.client.post(reverse("delete_task", args=[task.pk]), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Task.objects.filter(pk=task.pk).exists())
+
+    def test_non_owner_cannot_delete_task(self):
+        task = Task.objects.create(
+            title="Keep Me",
+            description="desc",
+            owner=self.user,
+        )
+        self.client.login(username="other", password="pass1234")
+        response = self.client.post(reverse("delete_task", args=[task.pk]))
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(Task.objects.filter(pk=task.pk).exists())
+
+    def test_logout_requires_post(self):
+        self.client.login(username="owner", password="pass1234")
+        response = self.client.get(reverse("logout"))
+        self.assertEqual(response.status_code, 405)
+        self.assertIsNotNone(self.client.session.get("_auth_user_id"))
+
+    def test_logout_post_logs_user_out(self):
+        self.client.login(username="owner", password="pass1234")
+        response = self.client.post(reverse("logout"), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(self.client.session.get("_auth_user_id"))
