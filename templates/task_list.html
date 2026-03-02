@@ -24,7 +24,10 @@
                 {% endwith %}
                 <div class="actions">
                     <a class="btn secondary" href="{% url 'update_task' task.pk %}">Edit</a>
-                    <a class="btn danger" href="{% url 'delete_task' task.pk %}">Delete</a>
+                    <form method="post" action="{% url 'delete_task' task.pk %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn danger">Delete</button>
+                    </form>
                 </div>
             </article>
         {% endfor %}

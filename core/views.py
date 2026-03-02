@@ -4,6 +4,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .models import Comment, Task
 
@@ -140,9 +141,11 @@ def create_task(request):
 
 
 @login_required
+@require_POST
 def delete_task(request, pk):
     task = get_object_or_404(Task, pk=pk, owner=request.user)
     task.delete()
+    messages.success(request, "Task deleted.")
     return redirect("task_list")
 
 
@@ -160,6 +163,7 @@ def update_task(request, pk):
     return render(request, "task_form.html", {"form": form, "task": task})
 
 
+@require_POST
 def logout_view(request):
     logout(request)
     return redirect("home")

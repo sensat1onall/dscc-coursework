@@ -1,4 +1,4 @@
-# Task Manager – DSCC Coursework
+# Task Manager - DSCC Coursework
 
 Small Django 6 app with user auth, task management, comments, and collaboration, packaged for production with Docker (Django + PostgreSQL + Nginx + Gunicorn) and CI/CD via GitHub Actions.
 
@@ -47,6 +47,14 @@ docker compose -f docker-compose.dev.yml up -d --build
 ## Environment Variables (`.env.example`)
 `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `TIME_ZONE`.
 
+## Screenshots
+Store screenshots in `docs/screenshots/` and replace placeholders below before final submission:
+- `docs/screenshots/home.png` - landing page
+- `docs/screenshots/tasks.png` - task list and shared tasks
+- `docs/screenshots/task-detail.png` - task detail with comments
+- `docs/screenshots/admin.png` - Django admin panel
+- `docs/screenshots/github-actions.png` - successful CI/CD run
+
 ## CI/CD
 - Workflow: `.github/workflows/deploy.yml`
   - flake8 + black --check
@@ -56,11 +64,11 @@ docker compose -f docker-compose.dev.yml up -d --build
 - Deployment helper script: `scripts/deploy.sh` (expects repo & `.env` on server, defaults to `/opt/dscc-coursework`).
 
 ## Project Structure
-- `config/settings.py` – env-driven settings, Postgres-first, static/media paths, auth redirects.
-- `core/models.py` – `Category`, `Task`, `Comment` models with relationships and status choices.
-- `core/views.py` – auth views, task CRUD, detail with comments.
-- `templates/` – base, auth, task pages; `static/css/style.css` for basic styling.
-- `docker/` – `entrypoint.sh`, Nginx config.
+- `config/settings.py` - env-driven settings, Postgres-first, static/media paths, auth redirects.
+- `core/models.py` - `Category`, `Task`, `Comment` models with relationships and status choices.
+- `core/views.py` - auth views, task CRUD, detail with comments.
+- `templates/` - base, auth, task pages; `static/css/style.css` for basic styling.
+- `docker/` - `entrypoint.sh`, Nginx config.
 - `docker-compose.yml`, `docker-compose.dev.yml`, `Dockerfile`, `.dockerignore`.
 - Tests: `core/tests/`.
 
