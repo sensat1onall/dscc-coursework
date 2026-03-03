@@ -39,6 +39,13 @@ Services:
 - `db`: Postgres 16 with persistent volume.
 - `nginx`: serves static/media and proxies to web.
 
+For server deployments from Docker Hub image:
+```bash
+export WEB_IMAGE=<dockerhub-user>/dscc-coursework:latest
+docker compose pull
+docker compose up -d --no-build
+```
+
 Dev override (hot reload):
 ```bash
 docker compose -f docker-compose.dev.yml up -d --build
@@ -60,8 +67,9 @@ Store screenshots in `docs/screenshots/` and replace placeholders below before f
   - flake8 + black --check
   - pytest (Postgres service)
   - Build & push Docker image to Docker Hub (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`)
-  - SSH deploy to server (`SSH_HOST`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`), runs migrations & collectstatic.
-- Deployment helper script: `scripts/deploy.sh` (expects repo & `.env` on server, defaults to `/opt/dscc-coursework`).
+  - SSH deploy to GCP VM (`GCP_SSH_HOST`, `GCP_SSH_USERNAME`, `GCP_SSH_PRIVATE_KEY`, optional `GCP_PROJECT_DIR`)
+  - Server deploy uses image tag `${{ github.sha }}` via `WEB_IMAGE` and runs migrations + collectstatic.
+- Deployment helper script: `scripts/deploy.sh` (expects repo + `.env` on server and `WEB_IMAGE` env var).
 
 ## Project Structure
 - `config/settings.py` - env-driven settings, Postgres-first, static/media paths, auth redirects.
@@ -72,18 +80,24 @@ Store screenshots in `docs/screenshots/` and replace placeholders below before f
 - `docker-compose.yml`, `docker-compose.dev.yml`, `Dockerfile`, `.dockerignore`.
 - Tests: `core/tests/`.
 
-## How to deploy on server (Eskiz or other)
-1. Install Docker & Docker Compose; clone repo to `/opt/dscc-coursework`.
-2. Add `.env` (use Postgres credentials + domain in `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`).
-3. (Optional) `chmod +x scripts/deploy.sh`.
-4. Pull and start:
+## Deploy on Google Cloud Platform (Compute Engine)
+Detailed commands: `docs/gcp-deploy.md`.
+
+1. Create Ubuntu VM (e2-medium or better) and reserve a static external IP.
+2. Open firewall rules for TCP `22`, `80`, `443` in GCP VPC firewall.
+3. Install Docker + Docker Compose plugin on VM.
+4. Clone repo to `/opt/dscc-coursework` and add production `.env`.
+5. Set production env values:
+   - `DEBUG=False`
+   - strong `SECRET_KEY`
+   - `ALLOWED_HOSTS=<your-domain>,<vm-ip>`
+   - `CSRF_TRUSTED_ORIGINS=https://<your-domain>`
+6. Start stack:
    ```bash
-   docker compose pull
-   docker compose up -d
-   docker compose exec -T web python manage.py migrate --noinput
-   docker compose exec -T web python manage.py collectstatic --noinput
+   docker compose up -d --build
    ```
-5. Attach domain + TLS (e.g., certbot on host, or terminate TLS upstream) pointing to Nginx (port 80/443).
+7. Point your domain DNS `A` record to the VM static IP.
+8. Install TLS certificate on VM (certbot or managed proxy) and enforce HTTPS.
 
 ## Testing
 ```bash
@@ -95,7 +109,13 @@ Uses `pytest-django`; default DB is SQLite unless `DB_*` env vars set.
 - Django app meets feature spec (auth, >=3 models, CRUD, admin, static, 5+ views).
 - Postgres primary database via env vars; Docker Compose with web/db/nginx, multi-stage Dockerfile, non-root user, .dockerignore, volumes for DB/static/media.
 - Production settings: DEBUG flag, ALLOWED_HOSTS, SECRET_KEY from env.
-- CI/CD pipeline with linting, tests, image build/push, SSH deploy with migrations & collectstatic.
+- CI/CD pipeline with linting, tests, image build/push, and auto-deploy to GCP VM with migrations & collectstatic.
 - README with setup/deploy instructions; .env template, docker-compose dev override.
+
+## Live submission data (fill before submission)
+- Live app URL (HTTPS): `<add-url>`
+- GitHub URL: `https://github.com/sensat1onall/dscc-coursework`
+- Docker Hub URL: `<add-url>`
+- Test credentials for assessor: `<username>/<password>`
 
 Screenshots, PDF report, and 4-min video still need to be produced manually after running the app and pipeline.

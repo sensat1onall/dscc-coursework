@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   web:
+    image: ${WEB_IMAGE:-dscc-coursework-web:local}
     build: .
     command: /bin/sh /app/docker/entrypoint.sh
     env_file: .env

@@ -73,13 +73,18 @@ jobs:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.GCP_SSH_HOST }}
+          username: ${{ secrets.GCP_SSH_USERNAME }}
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
           script: |
-            export PROJECT_DIR=/opt/dscc-coursework
+            export PROJECT_DIR=${{ secrets.GCP_PROJECT_DIR }}
+            if [ -z "$PROJECT_DIR" ]; then
+              export PROJECT_DIR=/opt/dscc-coursework
+            fi
+            export WEB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             cd $PROJECT_DIR
-            docker compose pull
-            docker compose up -d
-            docker compose exec -T web python manage.py migrate --noinput
-            docker compose exec -T web python manage.py collectstatic --noinput
+            git fetch --all --prune
+            git checkout main
+            git pull --ff-only origin main
+            chmod +x scripts/deploy.sh
+            ./scripts/deploy.sh
