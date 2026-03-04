@@ -4,7 +4,6 @@ from django.urls import reverse
 
 from core.models import Task
 
-
 User = get_user_model()
 
 

@@ -3,7 +3,6 @@ from django.test import TestCase
 
 from core.models import Category, Comment, Task
 
-
 User = get_user_model()
 
 

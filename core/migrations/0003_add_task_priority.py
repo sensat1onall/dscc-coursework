@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0002_comment_and_task_updates'),
+        ("core", "0002_comment_and_task_updates"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='task',
-            name='priority',
-            field=models.CharField(choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], default='medium', max_length=10),
+            model_name="task",
+            name="priority",
+            field=models.CharField(
+                choices=[("low", "Low"), ("medium", "Medium"), ("high", "High")],
+                default="medium",
+                max_length=10,
+            ),
         ),
     ]

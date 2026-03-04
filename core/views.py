@@ -29,11 +29,7 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ["body"]
-        widgets = {
-            "body": forms.Textarea(
-                attrs={"rows": 3, "placeholder": "Write a comment..."}
-            )
-        }
+        widgets = {"body": forms.Textarea(attrs={"rows": 3, "placeholder": "Write a comment..."})}
 
 
 def home(request):
@@ -106,9 +102,7 @@ def task_list(request):
 @login_required
 def task_detail(request, pk):
     task = get_object_or_404(
-        Task.objects.select_related("category", "owner").prefetch_related(
-            "collaborators"
-        ),
+        Task.objects.select_related("category", "owner").prefetch_related("collaborators"),
         pk=pk,
     )
     if task.owner != request.user and request.user not in task.collaborators.all():
