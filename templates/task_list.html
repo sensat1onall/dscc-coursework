@@ -1,53 +1,222 @@
 {% extends "base.html" %}
 
+{% block title %}Board — TaskFlow{% endblock %}
+
 {% block content %}
-<div class="page-header">
-    <h2>My Tasks</h2>
-    <a class="btn primary" href="{% url 'create_task' %}">Create Task</a>
+<div class="board-header">
+    <h2>My Board</h2>
+    <a class="btn primary" href="{% url 'create_task' %}">+ New Task</a>
 </div>
 
-<section class="list">
-    {% if tasks %}
-        {% for task in tasks %}
-            <article class="task">
-                <header>
-                    <h3><a href="{% url 'task_detail' task.pk %}">{{ task.title }}</a></h3>
-                    <span class="badge">{{ task.get_status_display }}</span>
-                </header>
-                <p class="muted">{{ task.category|default:"No category" }}</p>
-                {% with collabs=task.collaborators.all %}
-                    <p class="muted">Collaborators:
-                        {% if collabs %}
-                            {% for c in collabs %}{{ c.username }}{% if not forloop.last %}, {% endif %}{% endfor %}
-                        {% else %}None{% endif %}
-                    </p>
-                {% endwith %}
-                <div class="actions">
-                    <a class="btn secondary" href="{% url 'update_task' task.pk %}">Edit</a>
+<div class="kanban-board" id="kanban-board">
+    <!-- TO DO Column -->
+    <div class="kanban-column">
+        <div class="column-header todo-header">
+            <span class="column-title"><span class="column-dot todo"></span> To Do</span>
+            <span class="column-count">{{ todo_tasks|length }}</span>
+        </div>
+        <div class="column-body" data-status="todo" id="col-todo">
+            {% for task in todo_tasks %}
+            <div class="task-card todo-card" draggable="true" data-id="{{ task.pk }}">
+                <div class="task-card-actions">
+                    <a class="btn sm secondary" href="{% url 'update_task' task.pk %}">Edit</a>
                     <form method="post" action="{% url 'delete_task' task.pk %}" class="inline-form">
                         {% csrf_token %}
-                        <button type="submit" class="btn danger">Delete</button>
+                        <button type="submit" class="btn sm danger">Del</button>
                     </form>
                 </div>
-            </article>
-        {% endfor %}
-    {% else %}
-        <p class="muted">No tasks yet.</p>
-    {% endif %}
-</section>
+                <div class="task-card-title"><a href="{% url 'task_detail' task.pk %}">{{ task.title }}</a></div>
+                <div class="task-card-meta">
+                    {% if task.category %}
+                    <span class="task-badge badge-category">{{ task.category.name }}</span>
+                    {% endif %}
+                    <span class="task-badge badge-priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                </div>
+                <div class="task-card-footer">
+                    <span class="task-card-time">{{ task.updated_at|timesince }} ago</span>
+                    <div class="task-card-collabs">
+                        {% for c in task.collaborators.all %}
+                        <span class="collab-avatar" title="{{ c.username }}">{{ c.username|make_list|first|upper
+                            }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">📝</div>
+                <p>No tasks yet</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- IN PROGRESS Column -->
+    <div class="kanban-column">
+        <div class="column-header progress-header">
+            <span class="column-title"><span class="column-dot progress"></span> In Progress</span>
+            <span class="column-count">{{ inprogress_tasks|length }}</span>
+        </div>
+        <div class="column-body" data-status="in_progress" id="col-inprogress">
+            {% for task in inprogress_tasks %}
+            <div class="task-card progress-card" draggable="true" data-id="{{ task.pk }}">
+                <div class="task-card-actions">
+                    <a class="btn sm secondary" href="{% url 'update_task' task.pk %}">Edit</a>
+                    <form method="post" action="{% url 'delete_task' task.pk %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn sm danger">Del</button>
+                    </form>
+                </div>
+                <div class="task-card-title"><a href="{% url 'task_detail' task.pk %}">{{ task.title }}</a></div>
+                <div class="task-card-meta">
+                    {% if task.category %}
+                    <span class="task-badge badge-category">{{ task.category.name }}</span>
+                    {% endif %}
+                    <span class="task-badge badge-priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                </div>
+                <div class="task-card-footer">
+                    <span class="task-card-time">{{ task.updated_at|timesince }} ago</span>
+                    <div class="task-card-collabs">
+                        {% for c in task.collaborators.all %}
+                        <span class="collab-avatar" title="{{ c.username }}">{{ c.username|make_list|first|upper
+                            }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">🔄</div>
+                <p>Nothing in progress</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- DONE Column -->
+    <div class="kanban-column">
+        <div class="column-header done-header">
+            <span class="column-title"><span class="column-dot done"></span> Done</span>
+            <span class="column-count">{{ done_tasks|length }}</span>
+        </div>
+        <div class="column-body" data-status="done" id="col-done">
+            {% for task in done_tasks %}
+            <div class="task-card done-card" draggable="true" data-id="{{ task.pk }}">
+                <div class="task-card-actions">
+                    <a class="btn sm secondary" href="{% url 'update_task' task.pk %}">Edit</a>
+                    <form method="post" action="{% url 'delete_task' task.pk %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn sm danger">Del</button>
+                    </form>
+                </div>
+                <div class="task-card-title"><a href="{% url 'task_detail' task.pk %}">{{ task.title }}</a></div>
+                <div class="task-card-meta">
+                    {% if task.category %}
+                    <span class="task-badge badge-category">{{ task.category.name }}</span>
+                    {% endif %}
+                    <span class="task-badge badge-priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                </div>
+                <div class="task-card-footer">
+                    <span class="task-card-time">{{ task.updated_at|timesince }} ago</span>
+                    <div class="task-card-collabs">
+                        {% for c in task.collaborators.all %}
+                        <span class="collab-avatar" title="{{ c.username }}">{{ c.username|make_list|first|upper
+                            }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">✅</div>
+                <p>No completed tasks</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 
 {% if shared_tasks %}
-<h2>Shared With Me</h2>
-<section class="list">
-    {% for task in shared_tasks %}
-        <article class="task">
-            <header>
-                <h3><a href="{% url 'task_detail' task.pk %}">{{ task.title }}</a></h3>
-                <span class="badge">{{ task.get_status_display }}</span>
-            </header>
-            <p class="muted">Owner: {{ task.owner.username }}</p>
-        </article>
-    {% endfor %}
-</section>
+<div class="shared-section">
+    <h3>📨 Shared With Me</h3>
+    <div class="shared-grid">
+        {% for task in shared_tasks %}
+        <a href="{% url 'task_detail' task.pk %}" class="shared-card" style="text-decoration:none;color:inherit;">
+            <div class="task-card-title">{{ task.title }}</div>
+            <div class="task-card-meta">
+                <span class="task-badge badge-category">{{ task.get_status_display }}</span>
+                {% if task.category %}
+                <span class="task-badge badge-category">{{ task.category.name }}</span>
+                {% endif %}
+            </div>
+            <div class="shared-card-owner">by {{ task.owner.username }}</div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
 {% endif %}
+
+<script>
+    /* ---- Drag & Drop for Kanban ---- */
+    (function () {
+        var board = document.getElementById('kanban-board');
+        if (!board) return;
+
+        var csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+        var csrfToken = csrfEl ? csrfEl.value : '';
+        var draggedCard = null;
+
+        board.addEventListener('dragstart', function (e) {
+            if (!e.target.classList.contains('task-card')) return;
+            draggedCard = e.target;
+            draggedCard.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', e.target.dataset.id);
+        });
+
+        board.addEventListener('dragend', function () {
+            if (draggedCard) draggedCard.classList.remove('dragging');
+            document.querySelectorAll('.column-body').forEach(function (c) { c.classList.remove('drag-over'); });
+            draggedCard = null;
+        });
+
+        var columns = document.querySelectorAll('.column-body');
+        columns.forEach(function (col) {
+            col.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                col.classList.add('drag-over');
+            });
+            col.addEventListener('dragleave', function () {
+                col.classList.remove('drag-over');
+            });
+            col.addEventListener('drop', function (e) {
+                e.preventDefault();
+                col.classList.remove('drag-over');
+                if (!draggedCard) return;
+                var taskId = draggedCard.dataset.id;
+                var newStatus = col.dataset.status;
+                col.appendChild(draggedCard);
+
+                /* Update card border color */
+                var cls = newStatus === 'todo' ? 'todo-card' : newStatus === 'in_progress' ? 'progress-card' : 'done-card';
+                draggedCard.className = 'task-card ' + cls;
+                draggedCard.setAttribute('draggable', 'true');
+
+                /* Remove empty state if present */
+                var emptyEl = col.querySelector('.empty-state');
+                if (emptyEl) emptyEl.remove();
+
+                /* AJAX call */
+                fetch('/tasks/' + taskId + '/status/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                    body: JSON.stringify({ status: newStatus })
+                }).then(function (r) {
+                    if (!r.ok) location.reload();
+                }).catch(function () { location.reload(); });
+            });
+        });
+    })();
+</script>
 {% endblock %}

@@ -1,12 +1,35 @@
 {% extends "base.html" %}
 
-{% block content %}
-<section class="hero">
-    <h1>Organize tasks, collaborate, and track progress.</h1>
-    <p>Create tasks, invite collaborators, comment on work, and keep everything in one place.</p>
-    <div class="cta">
-        <a class="btn primary" href="{% url 'register' %}">Get Started</a>
-        <a class="btn secondary" href="{% url 'login' %}">Log In</a>
+{% block title %}TaskFlow — Organize, Collaborate, Track{% endblock %}
+
+{% block body %}
+<section class="hero-section">
+    <div class="hero-inner">
+        <h1>Organize tasks,<br><span>collaborate</span>, and track progress.</h1>
+        <p class="subtitle">Create tasks, invite collaborators, leave comments, and keep everything on track — all in
+            one place.</p>
+        <div class="hero-cta">
+            <a class="btn primary" href="{% url 'register' %}">Get Started Free</a>
+            <a class="btn secondary" href="{% url 'login' %}">Log In</a>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">📋</div>
+                <h3>Kanban Board</h3>
+                <p>Visualize your workflow with drag-and-drop columns for To Do, In Progress, and Done.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Team Collaboration</h3>
+                <p>Invite collaborators, share tasks, and leave comments to keep everyone aligned.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Priority Tracking</h3>
+                <p>Set priorities, categorize tasks, and focus on what matters most.</p>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}

@@ -25,6 +25,7 @@ class ViewTests(TestCase):
             "title": "New Task",
             "description": "Details",
             "status": "todo",
+            "priority": "medium",
         }
         response = self.client.post(reverse("create_task"), payload, follow=True)
         self.assertEqual(response.status_code, 200)
@@ -55,6 +56,7 @@ class ViewTests(TestCase):
                 "title": "Update Me",
                 "description": "desc",
                 "status": "done",
+                "priority": "medium",
             },
             follow=True,
         )

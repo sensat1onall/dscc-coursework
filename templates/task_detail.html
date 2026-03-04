@@ -1,54 +1,92 @@
 {% extends "base.html" %}
 
+{% block title %}{{ task.title }} — TaskFlow{% endblock %}
+
 {% block content %}
-<article class="card">
-    <header class="detail-header">
+<article class="detail-card">
+    <div class="detail-top">
         <div>
-            <p class="muted">Status: <span class="badge">{{ task.get_status_display }}</span></p>
-            <h2>{{ task.title }}</h2>
-            {% if task.category %}<p class="muted">Category: {{ task.category.name }}</p>{% endif %}
+            <div class="detail-meta">
+                <span class="status-chip {{ task.status }}">
+                    {% if task.status == 'todo' %}📋{% elif task.status == 'in_progress' %}🔄{% else %}✅{% endif %}
+                    {{ task.get_status_display }}
+                </span>
+                <span class="priority-chip {{ task.priority }}">
+                    {% if task.priority == 'high' %}🔴{% elif task.priority == 'medium' %}🟡{% else %}🔵{% endif %}
+                    {{ task.get_priority_display }} Priority
+                </span>
+            </div>
+            <h2 class="detail-title">{{ task.title }}</h2>
+            {% if task.category %}
+            <span class="task-badge badge-category" style="margin-bottom:8px;display:inline-block;">{{
+                task.category.name }}</span>
+            {% endif %}
         </div>
-        <div class="actions">
-            <a class="btn secondary" href="{% url 'update_task' task.pk %}">Edit</a>
+        <div class="detail-actions">
+            <a class="btn secondary" href="{% url 'update_task' task.pk %}">✏️ Edit</a>
             <form method="post" action="{% url 'delete_task' task.pk %}" class="inline-form">
                 {% csrf_token %}
-                <button type="submit" class="btn danger">Delete</button>
+                <button type="submit" class="btn danger">🗑 Delete</button>
             </form>
         </div>
-    </header>
-    <p>{{ task.description }}</p>
-    <p class="muted">Owner: {{ task.owner.username }}</p>
+    </div>
+
+    <p class="detail-desc">{{ task.description }}</p>
+
+    <div class="detail-info">
+        <span>👤 <strong>Owner:</strong> {{ task.owner.username }}</span>
+        <span>📅 <strong>Created:</strong> {{ task.created_at|date:"M d, Y" }}</span>
+        <span>🔄 <strong>Updated:</strong> {{ task.updated_at|timesince }} ago</span>
+    </div>
+
     {% with collabs=task.collaborators.all %}
-        <p class="muted">Collaborators:
-            {% if collabs %}
-                {% for c in collabs %}{{ c.username }}{% if not forloop.last %}, {% endif %}{% endfor %}
-            {% else %}None{% endif %}
-        </p>
+    {% if collabs %}
+    <div style="margin-top:16px;">
+        <strong style="font-size:.85rem;color:var(--text-secondary);">Collaborators:</strong>
+        <div class="collab-chips">
+            {% for c in collabs %}
+            <span class="collab-chip">{{ c.username }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
     {% endwith %}
 </article>
 
-<section class="card">
-    <h3>Comments</h3>
+<section class="comments-section">
+    <h3>💬 Comments ({{ comments|length }})</h3>
+
     {% if comments %}
-        <ul class="comment-list">
-            {% for comment in comments %}
-                <li>
-                    <div class="comment-meta">
-                        <strong>{{ comment.author.username }}</strong>
-                        <span class="muted">{{ comment.created_at|date:"Y-m-d H:i" }}</span>
-                    </div>
-                    <p>{{ comment.body }}</p>
-                </li>
-            {% endfor %}
-        </ul>
+    {% for comment in comments %}
+    <div class="comment-item">
+        <div class="comment-avatar">{{ comment.author.username|make_list|first|upper }}</div>
+        <div class="comment-body">
+            <div class="comment-header">
+                <span class="comment-author">{{ comment.author.username }}</span>
+                <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+            </div>
+            <p class="comment-text">{{ comment.body }}</p>
+        </div>
+    </div>
+    {% endfor %}
     {% else %}
-        <p class="muted">No comments yet.</p>
+    <div class="empty-state">
+        <div class="empty-icon">💬</div>
+        <p>No comments yet. Be the first to comment!</p>
+    </div>
     {% endif %}
 
-    <form method="post">
+    <form method="post" style="margin-top:20px;">
         {% csrf_token %}
-        {{ comment_form.as_p }}
-        <button type="submit" class="btn primary">Add comment</button>
+        <div class="form-group">
+            <label for="{{ comment_form.body.id_for_label }}">Add a comment</label>
+            {{ comment_form.body }}
+        </div>
+        <button type="submit" class="btn primary">Post Comment</button>
     </form>
 </section>
+
+<div style="margin-top:16px;">
+    <a href="{% url 'task_list' %}" class="btn secondary">← Back to Board</a>
+</div>
 {% endblock %}

@@ -1,13 +1,36 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="card">
-    <h2>Create your account</h2>
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn primary">Register</button>
-    </form>
-    <p class="muted">Already have an account? <a href="{% url 'login' %}">Log in</a>.</p>
-</div>
+{% block title %}Register — TaskFlow{% endblock %}
+
+{% block body %}
+<section class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">🚀</div>
+            <h2>Create your account</h2>
+            <p class="auth-subtitle">Start managing your tasks in seconds</p>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <span class="helptext">{{ field.help_text|safe }}</span>
+                {% endif %}
+                {% for error in field.errors %}
+                <span class="errorlist">{{ error }}</span>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn primary">Create Account</button>
+        </form>
+
+        <p class="auth-footer">
+            Already have an account? <a href="{% url 'login' %}">Sign in</a>
+        </p>
+    </div>
+</section>
 {% endblock %}

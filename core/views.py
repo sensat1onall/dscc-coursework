@@ -1,8 +1,11 @@
+import json
+
 from django import forms
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -12,10 +15,13 @@ from .models import Comment, Task
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ["title", "description", "status", "category", "collaborators"]
+        fields = ["title", "description", "status", "priority", "category", "collaborators"]
         widgets = {
-            "status": forms.Select(attrs={"class": "status-select"}),
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "status": forms.Select(attrs={"class": "form-select"}),
+            "priority": forms.Select(attrs={"class": "form-select"}),
+            "description": forms.Textarea(attrs={"rows": 4, "placeholder": "Describe the task..."}),
+            "title": forms.TextInput(attrs={"placeholder": "Task title"}),
+            "collaborators": forms.SelectMultiple(attrs={"class": "form-select"}),
         }
 
 
@@ -23,7 +29,11 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ["body"]
-        widgets = {"body": forms.Textarea(attrs={"rows": 3})}
+        widgets = {
+            "body": forms.Textarea(
+                attrs={"rows": 3, "placeholder": "Write a comment..."}
+            )
+        }
 
 
 def home(request):
@@ -65,23 +75,29 @@ def login_view(request):
 
 @login_required
 def task_list(request):
-    tasks = (
+    base_qs = (
         Task.objects.filter(owner=request.user)
         .select_related("category")
         .prefetch_related("collaborators")
-        .order_by("-updated_at")
     )
+    todo_tasks = base_qs.filter(status="todo").order_by("-updated_at")
+    inprogress_tasks = base_qs.filter(status="in_progress").order_by("-updated_at")
+    done_tasks = base_qs.filter(status="done").order_by("-updated_at")
+
     shared_tasks = (
         Task.objects.filter(collaborators=request.user)
         .select_related("category")
         .prefetch_related("collaborators", "owner")
         .order_by("-updated_at")
     )
+
     return render(
         request,
         "task_list.html",
         {
-            "tasks": tasks,
+            "todo_tasks": todo_tasks,
+            "inprogress_tasks": inprogress_tasks,
+            "done_tasks": done_tasks,
             "shared_tasks": shared_tasks,
         },
     )
@@ -161,6 +177,26 @@ def update_task(request, pk):
     else:
         form = TaskForm(instance=task)
     return render(request, "task_form.html", {"form": form, "task": task})
+
+
+@login_required
+@require_POST
+def update_task_status(request, pk):
+    """AJAX endpoint to update a task's status (for drag-and-drop)."""
+    task = get_object_or_404(Task, pk=pk, owner=request.user)
+    try:
+        data = json.loads(request.body)
+        new_status = data.get("status")
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    valid_statuses = [c[0] for c in Task.STATUS_CHOICES]
+    if new_status not in valid_statuses:
+        return JsonResponse({"error": "Invalid status"}, status=400)
+
+    task.status = new_status
+    task.save(update_fields=["status", "updated_at"])
+    return JsonResponse({"ok": True, "status": new_status})
 
 
 @require_POST
