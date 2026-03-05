@@ -117,4 +117,4 @@ Uses `pytest-django`; default DB is SQLite unless `DB_*` env vars set.
 - Live app URL (HTTP/IP): `http://51.120.120.23/`
 - GitHub URL: `https://github.com/sensat1onall/dscc-coursework`
 - Docker Hub URL: `https://hub.docker.com/r/sensat1onall/dscc-coursework`
-- Test credentials for assessor: `<username>/<password>`
+- Test credentials for assessor: `Suxrob` / `Frag_andy0656`
