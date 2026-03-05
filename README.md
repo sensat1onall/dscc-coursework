@@ -112,10 +112,9 @@ Uses `pytest-django`; default DB is SQLite unless `DB_*` env vars set.
 - CI/CD pipeline with linting, tests, image build/push, and auto-deploy to GCP VM with migrations & collectstatic.
 - README with setup/deploy instructions; .env template, docker-compose dev override.
 
-## Live submission data (fill before submission)
-- Live app URL (HTTPS): `<add-url>`
+## Live submission data
+- Live app URL (HTTPS): `https://dscc.azro.uz/`
+- Live app URL (HTTP/IP): `http://51.120.120.23/`
 - GitHub URL: `https://github.com/sensat1onall/dscc-coursework`
-- Docker Hub URL: `<add-url>`
+- Docker Hub URL: `https://hub.docker.com/r/sensat1onall/dscc-coursework`
 - Test credentials for assessor: `<username>/<password>`
-
-Screenshots, PDF report, and 4-min video still need to be produced manually after running the app and pipeline.
