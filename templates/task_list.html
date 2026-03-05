@@ -36,8 +36,7 @@
                     <span class="task-card-time">{{ task.updated_at|timesince }} ago</span>
                     <div class="task-card-collabs">
                         {% for c in task.collaborators.all %}
-                        <span class="collab-avatar" title="{{ c.username }}">{{ c.username|make_list|first|upper
-                            }}</span>
+                        <span class="collab-avatar" title="{{ c.username }}">{{ c.username|make_list|first|upper }}</span>
                         {% endfor %}
                     </div>
                 </div>
@@ -78,8 +77,7 @@
                     <span class="task-card-time">{{ task.updated_at|timesince }} ago</span>
                     <div class="task-card-collabs">
                         {% for c in task.collaborators.all %}
-                        <span class="collab-avatar" title="{{ c.username }}">{{ c.username|make_list|first|upper
-                            }}</span>
+                        <span class="collab-avatar" title="{{ c.username }}">{{ c.username|make_list|first|upper }}</span>
                         {% endfor %}
                     </div>
                 </div>
@@ -120,8 +118,7 @@
                     <span class="task-card-time">{{ task.updated_at|timesince }} ago</span>
                     <div class="task-card-collabs">
                         {% for c in task.collaborators.all %}
-                        <span class="collab-avatar" title="{{ c.username }}">{{ c.username|make_list|first|upper
-                            }}</span>
+                        <span class="collab-avatar" title="{{ c.username }}">{{ c.username|make_list|first|upper }}</span>
                         {% endfor %}
                     </div>
                 </div>
