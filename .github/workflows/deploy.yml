@@ -92,13 +92,16 @@ jobs:
             PROJECT_DIR="${PROJECT_DIR/#\~/$HOME}"
             mkdir -p "$PROJECT_DIR/scripts"
             mkdir -p "$PROJECT_DIR/docker/nginx"
+      - name: Package deploy assets
+        run: |
+          tar -czvf deploy.tar.gz docker-compose.yml scripts/deploy.sh docker/nginx/default.conf
       - name: Upload deploy assets
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.GCP_SSH_HOST }}
           username: ${{ secrets.GCP_SSH_USERNAME }}
           key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml,scripts/deploy.sh,docker/nginx/default.conf"
+          source: "deploy.tar.gz"
           target: ${{ steps.deploy-config.outputs.project_dir }}
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -111,6 +114,10 @@ jobs:
             PROJECT_DIR="${PROJECT_DIR/#\~/$HOME}"
             export PROJECT_DIR
             cd "$PROJECT_DIR"
+            
+            # Extract files and clean up
+            tar -xzvf deploy.tar.gz
+            rm deploy.tar.gz
 
             echo "Logging into Docker Hub..."
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
