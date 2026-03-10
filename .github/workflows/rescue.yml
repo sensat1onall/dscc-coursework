@@ -1,0 +1,36 @@
+name: Rescue Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Diagnostics Over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.GCP_SSH_HOST }}
+          username: ${{ secrets.GCP_SSH_USERNAME }}
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+          script: |
+            set -x
+            echo "=== Docker Containers ==="
+            docker ps -a
+            
+            echo "=== Project Directory Content ==="
+            ls -la /opt/dscc-coursework
+            ls -la /opt/dscc-coursework/docker/nginx
+            
+            echo "=== Checking for Certbot/SSL Files ==="
+            ls -la /etc/letsencrypt/live/ || echo "No let's encrypt"
+            
+            echo "=== Checking Nginx Configs ==="
+            cat /opt/dscc-coursework/docker/nginx/default.conf || true
+            
+            echo "=== Checking Server Ports ==="
+            sudo netstat -tlnp || ss -tlnp || true
+            
+            echo "=== Checking Caddy/Traefik ==="
+            systemctl status caddy || true
+            systemctl status nginx || true
