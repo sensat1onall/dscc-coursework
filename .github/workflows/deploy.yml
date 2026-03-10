@@ -74,19 +74,32 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          WEB_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          PROJECT_DIR: ${{ secrets.GCP_PROJECT_DIR }}
         with:
           host: ${{ secrets.GCP_SSH_HOST }}
           username: ${{ secrets.GCP_SSH_USERNAME }}
           key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,WEB_IMAGE,PROJECT_DIR
           script: |
-            export PROJECT_DIR=${{ secrets.GCP_PROJECT_DIR }}
             if [ -z "$PROJECT_DIR" ]; then
               export PROJECT_DIR=/opt/dscc-coursework
             fi
-            export WEB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             cd $PROJECT_DIR
+
+            echo "Logging into Docker Hub..."
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+
+            echo "Pulling new image: $WEB_IMAGE"
+            docker pull "$WEB_IMAGE"
+
             git fetch --all --prune
             git checkout main
             git pull --ff-only origin main
             chmod +x scripts/deploy.sh
+            export WEB_IMAGE
             ./scripts/deploy.sh
+
