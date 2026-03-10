@@ -20,7 +20,7 @@ echo "Pulling latest images..."
 docker compose pull
 
 echo "Recreating containers..."
-docker compose up -d --no-build --remove-orphans
+docker compose up -d --no-build --remove-orphans --force-recreate
 
 echo "Running migrations..."
 docker compose exec -T web python manage.py migrate --noinput
