@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,31 +9,32 @@
     <title>{% block title %}Task Manager{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20260305-1">
 </head>
+
 <body>
     <header class="top-nav">
-        <div class="brand"><a href="{% url 'home' %}">✦ TaskFlow</a></div>
+        <div class="brand"><a href="{% url 'home' %}"> TaskManager</a></div>
         <nav>
             {% if user.is_authenticated %}
-                <span class="nav-greeting">{{ user.username }}</span>
-                <a href="{% url 'task_list' %}">Board</a>
-                <a href="{% url 'create_task' %}">+ New Task</a>
-                <form method="post" action="{% url 'logout' %}" class="inline-form nav-form">
-                    {% csrf_token %}
-                    <button type="submit" class="nav-link-btn">Logout</button>
-                </form>
+            <span class="nav-greeting">{{ user.username }}</span>
+            <a href="{% url 'task_list' %}">Board</a>
+            <a href="{% url 'create_task' %}">+ New Task</a>
+            <form method="post" action="{% url 'logout' %}" class="inline-form nav-form">
+                {% csrf_token %}
+                <button type="submit" class="nav-link-btn">Logout</button>
+            </form>
             {% else %}
-                <a href="{% url 'login' %}">Login</a>
-                <a href="{% url 'register' %}">Register</a>
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Register</a>
             {% endif %}
         </nav>
     </header>
 
     {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li class="{{ message.tags }}">{{ message }}</li>
-            {% endfor %}
-        </ul>
+    <ul class="messages">
+        {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
     {% endif %}
 
     {% block body %}
@@ -45,4 +47,5 @@
         &copy; 2026 TaskFlow &mdash; DSCC Coursework
     </footer>
 </body>
+
 </html>
