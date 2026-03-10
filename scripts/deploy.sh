@@ -14,6 +14,16 @@ if [[ -z "${WEB_IMAGE:-}" ]]; then
   exit 1
 fi
 
+if [[ ! -f "docker-compose.yml" ]]; then
+  echo "docker-compose.yml is missing in $PROJECT_DIR. Aborting."
+  exit 1
+fi
+
+if [[ ! -f ".env" ]]; then
+  echo ".env is missing in $PROJECT_DIR. Aborting."
+  exit 1
+fi
+
 export WEB_IMAGE
 
 echo "Pulling latest images..."

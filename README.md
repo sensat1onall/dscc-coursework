@@ -68,8 +68,9 @@ Store screenshots in `docs/screenshots/` and replace placeholders below before f
   - pytest (Postgres service)
   - Build & push Docker image to Docker Hub (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`)
   - SSH deploy to GCP VM (`GCP_SSH_HOST`, `GCP_SSH_USERNAME`, `GCP_SSH_PRIVATE_KEY`, optional `GCP_PROJECT_DIR`)
+  - Workflow uploads `docker-compose.yml`, `scripts/deploy.sh`, and `docker/nginx/default.conf` to the VM before deploy, so ongoing deploys do not depend on `git pull` working on the server.
   - Server deploy uses image tag `${{ github.sha }}` via `WEB_IMAGE` and runs migrations + collectstatic.
-- Deployment helper script: `scripts/deploy.sh` (expects repo + `.env` on server and `WEB_IMAGE` env var).
+- Deployment helper script: `scripts/deploy.sh` (expects `.env`, `docker-compose.yml`, and `WEB_IMAGE` on the server).
 
 ## Project Structure
 - `config/settings.py` - env-driven settings, Postgres-first, static/media paths, auth redirects.
@@ -86,7 +87,7 @@ Detailed commands: `docs/gcp-deploy.md`.
 1. Create Ubuntu VM (e2-medium or better) and reserve a static external IP.
 2. Open firewall rules for TCP `22`, `80`, `443` in GCP VPC firewall.
 3. Install Docker + Docker Compose plugin on VM.
-4. Clone repo to `/opt/dscc-coursework` and add production `.env`.
+4. Bootstrap `/opt/dscc-coursework` once and add production `.env`.
 5. Set production env values:
    - `DEBUG=False`
    - strong `SECRET_KEY`
@@ -98,6 +99,7 @@ Detailed commands: `docs/gcp-deploy.md`.
    ```
 7. Point your domain DNS `A` record to the VM static IP.
 8. Install TLS certificate on VM (certbot or managed proxy) and enforce HTTPS.
+After the initial bootstrap, GitHub Actions uploads the deploy files on each push, so the VM does not need `git pull` to succeed for normal deploys.
 
 ## Testing
 ```bash

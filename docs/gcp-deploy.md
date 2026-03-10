@@ -33,6 +33,8 @@ Log out and back in after adding your user to the `docker` group.
 
 ## 4. Clone and configure app
 
+This clone is only for the initial bootstrap. Ongoing CI/CD deploys upload the deploy files over SCP and do not require `git pull` on the VM.
+
 ```bash
 sudo mkdir -p /opt/dscc-coursework
 sudo chown -R $USER:$USER /opt/dscc-coursework
@@ -72,4 +74,6 @@ Set repository secrets:
 
 Pipeline behavior:
 - Builds and pushes image tags `latest` and `${GITHUB_SHA}`.
+- Uploads `docker-compose.yml`, `scripts/deploy.sh`, and `docker/nginx/default.conf` to `GCP_PROJECT_DIR`.
 - SSHes into VM and runs `scripts/deploy.sh` with `WEB_IMAGE=<dockerhub-user>/dscc-coursework:${GITHUB_SHA}`.
+- Ongoing deploys do not require `git fetch`/`git pull` to work on the VM.

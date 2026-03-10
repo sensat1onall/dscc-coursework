@@ -58,6 +58,15 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
+      - name: Resolve deploy path
+        id: deploy-config
+        shell: bash
+        run: |
+          project_dir="${{ secrets.GCP_PROJECT_DIR }}"
+          if [ -z "$project_dir" ]; then
+            project_dir="/opt/dscc-coursework"
+          fi
+          echo "project_dir=$project_dir" >> "$GITHUB_OUTPUT"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to Docker Hub
@@ -72,6 +81,23 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: Prepare remote deploy directory
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.GCP_SSH_HOST }}
+          username: ${{ secrets.GCP_SSH_USERNAME }}
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p "${{ steps.deploy-config.outputs.project_dir }}/scripts"
+            mkdir -p "${{ steps.deploy-config.outputs.project_dir }}/docker/nginx"
+      - name: Upload deploy assets
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.GCP_SSH_HOST }}
+          username: ${{ secrets.GCP_SSH_USERNAME }}
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml,scripts/deploy.sh,docker/nginx/default.conf"
+          target: ${{ steps.deploy-config.outputs.project_dir }}
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -79,10 +105,7 @@ jobs:
           username: ${{ secrets.GCP_SSH_USERNAME }}
           key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
           script: |
-            export PROJECT_DIR="${{ secrets.GCP_PROJECT_DIR }}"
-            if [ -z "$PROJECT_DIR" ]; then
-              export PROJECT_DIR=/opt/dscc-coursework
-            fi
+            export PROJECT_DIR="${{ steps.deploy-config.outputs.project_dir }}"
             cd "$PROJECT_DIR"
 
             echo "Logging into Docker Hub..."
@@ -92,12 +115,6 @@ jobs:
             echo "Pulling new image: $WEB_IMAGE"
             docker pull "$WEB_IMAGE"
 
-            git fetch --all --prune
-            git checkout main
-            
-            # Use reset --hard to discard any local changes on the server that prevent pulling
-            git reset --hard origin/main
-            
             chmod +x scripts/deploy.sh
             export WEB_IMAGE
             ./scripts/deploy.sh
