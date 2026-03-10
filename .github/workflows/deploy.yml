@@ -93,16 +93,20 @@ jobs:
             mkdir -p "$PROJECT_DIR/scripts"
             mkdir -p "$PROJECT_DIR/docker/nginx"
       - name: Package deploy assets
+        id: package-assets
+        shell: bash
         run: |
-          tar -czvf deploy.tar.gz docker-compose.yml scripts/deploy.sh docker/nginx/default.conf
+          archive_name="deploy-${{ github.sha }}.tar.gz"
+          tar -czvf "$archive_name" docker-compose.yml scripts/deploy.sh docker/nginx/default.conf
+          echo "archive_name=$archive_name" >> "$GITHUB_OUTPUT"
       - name: Upload deploy assets
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.GCP_SSH_HOST }}
           username: ${{ secrets.GCP_SSH_USERNAME }}
           key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
-          source: "deploy.tar.gz"
-          target: ${{ steps.deploy-config.outputs.project_dir }}
+          source: ${{ steps.package-assets.outputs.archive_name }}
+          target: /tmp/
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -112,12 +116,25 @@ jobs:
           script: |
             PROJECT_DIR="${{ steps.deploy-config.outputs.project_dir }}"
             PROJECT_DIR="${PROJECT_DIR/#\~/$HOME}"
+            ARCHIVE_PATH="/tmp/${{ steps.package-assets.outputs.archive_name }}"
             export PROJECT_DIR
+
+            if [ ! -f "$ARCHIVE_PATH" ]; then
+              echo "Deploy archive not found: $ARCHIVE_PATH"
+              find /tmp -maxdepth 1 -name 'deploy-*.tar.gz' -print
+              exit 1
+            fi
+
+            tar -xzvf "$ARCHIVE_PATH" -C "$PROJECT_DIR"
+            rm -f "$ARCHIVE_PATH"
+
+            if [ ! -f "$PROJECT_DIR/scripts/deploy.sh" ]; then
+              echo "scripts/deploy.sh is missing after archive extraction."
+              find "$PROJECT_DIR" -maxdepth 3 -type f | sort
+              exit 1
+            fi
+
             cd "$PROJECT_DIR"
-            
-            # Extract files and clean up
-            tar -xzvf deploy.tar.gz
-            rm deploy.tar.gz
 
             echo "Logging into Docker Hub..."
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
@@ -128,5 +145,4 @@ jobs:
 
             chmod +x scripts/deploy.sh
             export WEB_IMAGE
-            ./scripts/deploy.sh
-
+            bash scripts/deploy.sh

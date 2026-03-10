@@ -74,6 +74,6 @@ Set repository secrets:
 
 Pipeline behavior:
 - Builds and pushes image tags `latest` and `${GITHUB_SHA}`.
-- Uploads `docker-compose.yml`, `scripts/deploy.sh`, and `docker/nginx/default.conf` to `GCP_PROJECT_DIR`.
+- Uploads a deploy archive to the VM, then extracts `docker-compose.yml`, `scripts/deploy.sh`, and `docker/nginx/default.conf` into `GCP_PROJECT_DIR`.
 - SSHes into VM and runs `scripts/deploy.sh` with `WEB_IMAGE=<dockerhub-user>/dscc-coursework:${GITHUB_SHA}`.
 - Ongoing deploys do not require `git fetch`/`git pull` to work on the VM.
