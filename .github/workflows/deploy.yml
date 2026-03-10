@@ -72,6 +72,13 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: Encode config files
+        id: configs
+        run: |
+          COMPOSE_B64=$(base64 -w0 docker-compose.yml)
+          NGINX_B64=$(base64 -w0 docker/nginx/default.conf)
+          echo "compose=$COMPOSE_B64" >> "$GITHUB_OUTPUT"
+          echo "nginx=$NGINX_B64" >> "$GITHUB_OUTPUT"
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -84,89 +91,20 @@ jobs:
             mkdir -p "$PROJECT_DIR/docker/nginx"
             cd "$PROJECT_DIR"
             echo "=== Working in: $(pwd) ==="
-
             echo "=== Writing docker-compose.yml ==="
-            cat > docker-compose.yml << 'COMPOSEEOF'
-            version: "3.9"
-            services:
-              web:
-                image: ${WEB_IMAGE:-dscc-coursework-web:local}
-                command: /bin/sh /app/docker/entrypoint.sh
-                env_file: .env
-                depends_on:
-                  - db
-                volumes:
-                  - static_volume:/app/staticfiles
-                  - media_volume:/app/media
-                restart: unless-stopped
-              db:
-                image: postgres:16-alpine
-                env_file: .env
-                environment:
-                  POSTGRES_DB: ${DB_NAME}
-                  POSTGRES_USER: ${DB_USER}
-                  POSTGRES_PASSWORD: ${DB_PASSWORD}
-                volumes:
-                  - postgres_data:/var/lib/postgresql/data
-                restart: unless-stopped
-              nginx:
-                image: nginx:1.25-alpine
-                ports:
-                  - "80:80"
-                depends_on:
-                  - web
-                volumes:
-                  - static_volume:/app/staticfiles
-                  - media_volume:/app/media
-                  - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-                restart: unless-stopped
-            volumes:
-              postgres_data:
-              static_volume:
-              media_volume:
-            COMPOSEEOF
-            sed -i 's/^            //' docker-compose.yml
-
+            echo "${{ steps.configs.outputs.compose }}" | base64 -d > docker-compose.yml
             echo "=== Writing nginx config ==="
-            cat > docker/nginx/default.conf << 'NGINXEOF'
-            upstream django {
-                server web:8000;
-            }
-            server {
-                listen 80;
-                server_name _;
-                location /static/ {
-                    alias /app/staticfiles/;
-                }
-                location /media/ {
-                    alias /app/media/;
-                }
-                location / {
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                    proxy_pass http://django;
-                }
-            }
-            NGINXEOF
-            sed -i 's/^            //' docker/nginx/default.conf
-
+            echo "${{ steps.configs.outputs.nginx }}" | base64 -d > docker/nginx/default.conf
             echo "=== Logging into Docker Hub ==="
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
             export WEB_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
             echo "=== Pulling image: $WEB_IMAGE ==="
             docker pull "$WEB_IMAGE"
-
             echo "=== Starting containers ==="
             docker compose pull
             docker compose up -d --no-build --remove-orphans --force-recreate
-
             echo "=== Running migrations ==="
             docker compose exec -T web python manage.py migrate --noinput
-
             echo "=== Collecting static files ==="
             docker compose exec -T web python manage.py collectstatic --noinput
-
             echo "=== Deployment finished successfully! ==="
