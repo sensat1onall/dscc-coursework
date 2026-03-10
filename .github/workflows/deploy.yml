@@ -72,6 +72,13 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: Encode config files
+        id: configs
+        run: |
+          COMPOSE_B64=$(tr -d '\r' < docker-compose.yml | base64 -w0)
+          NGINX_B64=$(tr -d '\r' < docker/nginx/default.conf | base64 -w0)
+          echo "compose=$COMPOSE_B64" >> "$GITHUB_OUTPUT"
+          echo "nginx=$NGINX_B64" >> "$GITHUB_OUTPUT"
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -81,12 +88,18 @@ jobs:
           script: |
             set -e
             cd /opt/dscc-coursework
+            mkdir -p docker/nginx
+            echo "=== Restoring config files ==="
+            echo "${{ steps.configs.outputs.compose }}" | base64 -d > docker-compose.yml
+            echo "${{ steps.configs.outputs.nginx }}" | base64 -d > docker/nginx/default.conf
             echo "=== Logging into Docker Hub ==="
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
             export WEB_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
             echo "=== Pulling image: $WEB_IMAGE ==="
             docker pull "$WEB_IMAGE"
-            echo "=== Restarting web container with new image ==="
+            echo "=== Ensuring all services are up ==="
+            docker compose up -d --no-build
+            echo "=== Force-recreating web with new image ==="
             docker compose up -d --no-build --force-recreate web
             echo "=== Running migrations ==="
             docker compose exec -T web python manage.py migrate --noinput
